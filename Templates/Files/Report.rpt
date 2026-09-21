@@ -73,28 +73,28 @@
 		lblCol1Header.Name = "lblCol1Header"
 		lblCol1Header.Text = "Column 1"
 		lblCol1Header.Font.Bold = True
-		lblCol1Header.SetBounds 30, 54, 200, 18
+		lblCol1Header.SetBounds 30, 85, 200, 18
 		lblCol1Header.Parent = @PageHeader
 		
 		lblCol2Header.Name = "lblCol2Header"
 		lblCol2Header.Text = "Column 2"
 		lblCol2Header.Font.Bold = True
-		lblCol2Header.SetBounds 240, 54, 200, 18
+		lblCol2Header.SetBounds 240, 85, 200, 18
 		lblCol2Header.Parent = @PageHeader
 		
 		fldColumn1.Name = "fldColumn1"
 		fldColumn1.DataField = "Column1"
-		fldColumn1.SetBounds 30, 78, 200, 20
+		fldColumn1.SetBounds 30, 138, 200, 20
 		fldColumn1.Parent = @Detail
 		
 		fldColumn2.Name = "fldColumn2"
 		fldColumn2.DataField = "Column2"
-		fldColumn2.SetBounds 240, 78, 200, 20
+		fldColumn2.SetBounds 240, 138, 200, 20
 		fldColumn2.Parent = @Detail
 		' SQLite3Component1
 		With SQLite3Component1
 			.Name = "SQLite3Component1"
-			.SetBounds 110, 130, 16, 16
+			.SetBounds 110, 200, 16, 16
 			.Designer = @This
 			.Parent = @This
 		End With

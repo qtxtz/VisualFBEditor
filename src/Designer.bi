@@ -159,6 +159,12 @@ Namespace My.Sys.Forms
 			Brush         As HBRUSH
 			PrevBrush     As HBRUSH
 		#endif
+		FReportDragging      As Boolean
+		FReportDragBandIndex As Integer
+		FReportDragStartY    As Integer
+		FReportDragStartH    As Integer
+		
+		Declare Function ReportBandEdgeAt(Y As Integer) As Integer
 		As Any Ptr OldCtrl
 		As String OldClassName
 		As Library Ptr OldLibrary
@@ -220,6 +226,7 @@ Namespace My.Sys.Forms
 		Declare Sub MouseMove(X As Integer, Y As Integer, Shift As Integer)
 		Declare Sub KeyDown(Key As Integer, Shift As Integer, Ctrl As Any Ptr = 0)
 	Public:
+		IsReportDesigner As Boolean
 		DesignControl As Any Ptr
 		SelectedControl As Any Ptr
 		SelectedControls As List

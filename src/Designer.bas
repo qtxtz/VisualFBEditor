@@ -27,6 +27,27 @@ Namespace My.Sys.Forms
 		End Function
 	#endif
 	
+	'Y koordinatasi biror band chegarasining RPT_EDGE_ZONE atrofida bo'lsa, o'sha band indeksini,
+	'aks holda -1 ni qaytaradi.
+	Function Designer.ReportBandEdgeAt(Y As Integer) As Integer
+		If Not IsReportDesigner Then Return -1
+		Dim As SymbolsType Ptr st = Symbols(DesignControl)
+		If st = 0 OrElse st->ReadPropertyFunc = 0 OrElse st->ReportBandByIndexFunc = 0 Then Return -1
+		If WGet(st->ReadPropertyFunc(DesignControl, "ClassName")) <> "Report" Then Return -1
+	
+		Const EdgeZone As Integer = 4 'avval Report.bas dagi RPT_EDGE_ZONE bilan bir xil edi
+		Dim As Integer BandCount = QInteger(st->ReadPropertyFunc(DesignControl, "BandCount"))
+		Dim As Integer Top = 0
+		For i As Integer = 0 To BandCount - 1
+			Dim As Any Ptr Band = st->ReportBandByIndexFunc(DesignControl, i)
+			Dim As Integer h    = QInteger(st->ReadPropertyFunc(Band, "Height"))
+			Dim As Integer Edge = Top + h
+			If Y >= Edge - EdgeZone AndAlso Y <= Edge + EdgeZone Then Return i
+			Top += h
+		Next i
+		Return -1
+	End Function
+	
 	Function Designer.GetParentControl(iControl As Any Ptr, ByVal toRoot As Boolean = True) As Any Ptr
 		If iControl = 0 Then Return iControl
 		Dim As Any Ptr iParentControl, iParentControlSave
@@ -3670,6 +3691,18 @@ Namespace My.Sys.Forms
 						ScreenToClient(.FDialog, @P)
 						.DblClick(.UnScaleX(P.X), .UnScaleY(P.Y), wParam And &HFFFF)
 						'Return 0
+					Case WM_SETCURSOR
+						Dim As DWORD dwTemp = GetMessagePos
+						Dim As POINTS psPoints = MAKEPOINTS(dwTemp)
+						Dim As Point poPoint
+						poPoint.X = psPoints.x
+						poPoint.Y = psPoints.y
+						..ScreenToClient(hDlg, @poPoint)
+						Dim As Integer BandIdx = .ReportBandEdgeAt(.UnScaleY(poPoint.Y))
+						If BandIdx >= 0 Then
+							Return Cast(LRESULT, SetCursor(LoadCursor(NULL, IDC_SIZENS)))
+						End If
+						Return 0
 					#endif
 					#ifdef __USE_GTK__
 					Case GDK_BUTTON_PRESS
@@ -3685,6 +3718,20 @@ Namespace My.Sys.Forms
 						P = Type<..Point>(LoWord(lParam), HiWord(lParam))
 						ClientToScreen(hDlg, @P)
 						ScreenToClient(.FDialog, @P)
+						Dim As Integer BandIdx = .ReportBandEdgeAt(.UnScaleY(P.Y))
+						If BandIdx >= 0 Then
+							Dim As SymbolsType Ptr st = .Symbols(.DesignControl)
+							Dim As Any Ptr Band       = st->ReportBandByIndexFunc(.DesignControl, BandIdx)
+							
+							.FReportDragging      = True
+							.FReportDragBandIndex = BandIdx
+							.FReportDragStartY    = .UnScaleY(HiWord(lParam))
+							.FReportDragStartH    = QInteger(st->ReadPropertyFunc(Band, "Height"))
+							
+							SetCapture(hDlg)
+							SetCursor(LoadCursor(0, IDC_SIZENS))
+							Return 0
+						End If
 						.MouseDown(.UnScaleX(P.X), .UnScaleY(P.Y), wParam And &HFFFF )
 						Return 0
 					#endif
@@ -3702,6 +3749,11 @@ Namespace My.Sys.Forms
 						P = Type<..Point>(LoWord(lParam), HiWord(lParam))
 						ClientToScreen(hDlg, @P)
 						ScreenToClient(.FDialog, @P)
+						If .FReportDragging Then
+							.FReportDragging = False
+							ReleaseCapture()
+							Return 0
+						End If
 						.MouseUp(.UnScaleX(P.X), .UnScaleY(P.Y), wParam And &HFFFF )
 						Return 0
 					#endif
@@ -3733,6 +3785,21 @@ Namespace My.Sys.Forms
 						P = Type<..Point>(LoWord(lParam), HiWord(lParam))
 						ClientToScreen(hDlg, @P)
 						ScreenToClient(.FDialog, @P)
+						If .FReportDragging Then
+							Dim As Integer NewY      = .UnScaleY(P.Y)
+							Dim As Integer NewHeight = .FReportDragStartH + (NewY - .FReportDragStartY)
+							If NewHeight < 8 Then NewHeight = 8
+					
+							Dim As SymbolsType Ptr st = .Symbols(.DesignControl)
+							Dim As Any Ptr Band       = st->ReportBandByIndexFunc(.DesignControl, .FReportDragBandIndex)
+							st->WritePropertyFunc(Band, "height", @NewHeight) 'endi ShiftControlsFrom bilan reflow qiladi
+					
+							SetCursor(LoadCursor(0, IDC_SIZENS))
+							Return 0
+						ElseIf .ReportBandEdgeAt(.UnScaleY(P.Y)) >= 0 Then
+							SetCursor(LoadCursor(0, IDC_SIZENS))
+							Return 0
+						End If
 						.MouseMove(.UnScaleX(P.X), .UnScaleY(P.Y), wParam And &HFFFF )
 						Return 0
 					#endif

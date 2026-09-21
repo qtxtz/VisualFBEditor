@@ -10057,6 +10057,7 @@ Sub TabWindow.FormDesign(NotForms As Boolean = False)
 								.DesignControl = .CreateControl("UserControl", frmName, frmName, 0, 0, 0, 350, 300, True)
 							ElseIf EndsWith(Trim(LCase(*FLine), Any !"\t "), " report") Then
 								.DesignControl = .CreateControl("Report", frmName, frmName, 0, 0, 0, 350, 300, True)
+								.IsReportDesigner = True
 							Else
 								.DesignControl = .CreateControl("Form", frmName, frmName, 0, 0, 0, 350, 300, True)
 							End If
