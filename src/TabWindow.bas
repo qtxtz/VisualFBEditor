@@ -1432,7 +1432,7 @@ Function TabWindow.ReadObjProperty(ByRef Obj As Any Ptr, ByRef PropertyName As S
 						tbi = pGlobalEnums->Object(iIndex)
 						If tbi Then
 							Dim As TypeElement Ptr te1
-							Dim As Integer enumIndex = -1
+							Dim As Integer enumIndex = iTemp
 							For i As Integer = 0 To tbi->Elements.Count - 1
 								te1 = tbi->Elements.Object(i)
 								If te1 <> 0 AndAlso te1->Value = Str(iTemp) Then enumIndex = i: Exit For
@@ -1453,7 +1453,7 @@ Function TabWindow.ReadObjProperty(ByRef Obj As Any Ptr, ByRef PropertyName As S
 						tbi = pGlobalEnums->Object(iIndex)
 						If tbi Then
 							Dim As TypeElement Ptr te1
-							Dim As Integer enumIndex = -1
+							Dim As Integer enumIndex = iTemp
 							For i As Integer = 0 To tbi->Elements.Count - 1
 								te1 = tbi->Elements.Object(i)
 								If te1 <> 0 AndAlso te1->Value = Str(iTemp) Then enumIndex = i: Exit For

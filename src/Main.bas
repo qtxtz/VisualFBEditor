@@ -13002,32 +13002,34 @@ End Sub
 
 Sub OnProgramQuit() Destructor
 	If bQuitting Then Exit Sub
-	'等待仍在运行的后台工作线程结束后再继续退出：
-	'进程退出时 LdrShutdownProcess 会逐一卸载 DLL（如 ntmarta），若仍有线程（文件加载、
-	'智能提示加载、AI 请求等）在使用这些 DLL，DLL 卸载会与线程竞争导致退出时崩溃
-	For i As Integer = 0 To Threads.Count - 1
-		Dim As Any Ptr tid = Threads.Item(i)
-		If tid <> 0 Then
+	#ifdef __USE_WINAPI__
+		'等待仍在运行的后台工作线程结束后再继续退出：
+		'进程退出时 LdrShutdownProcess 会逐一卸载 DLL（如 ntmarta），若仍有线程（文件加载、
+		'智能提示加载、AI 请求等）在使用这些 DLL，DLL 卸载会与线程竞争导致退出时崩溃
+		For i As Integer = 0 To Threads.Count - 1
+			Dim As Any Ptr tid = Threads.Item(i)
+			If tid <> 0 Then
+				Dim As Integer t = 0
+				Do
+					Dim As UInteger w = MsgWaitForMultipleObjects(1, @tid, 0, 100, &H00FF) 'QS_ALLINPUT
+					If w = 0 Then Exit Do '线程句柄已触发，线程已结束
+					If w = 1 Then pApp->DoEvents '泵消息，避免工作线程向 UI 线程发送消息时互相等待
+					t += 1
+				Loop While t < 100 '每线程最多约 10 秒，防止个别线程卡住导致无法退出
+			End If
+		Next
+		If AIThread <> 0 Then
+			Dim As Any Ptr aitid = AIThread
+			AIThread = 0
 			Dim As Integer t = 0
 			Do
-				Dim As UInteger w = MsgWaitForMultipleObjects(1, @tid, 0, 100, &H00FF) 'QS_ALLINPUT
-				If w = 0 Then Exit Do '线程句柄已触发，线程已结束
-				If w = 1 Then pApp->DoEvents '泵消息，避免工作线程向 UI 线程发送消息时互相等待
+				Dim As UInteger w = MsgWaitForMultipleObjects(1, @aitid, 0, 100, &H00FF)
+				If w = 0 Then Exit Do
+				If w = 1 Then pApp->DoEvents
 				t += 1
-			Loop While t < 100 '每线程最多约 10 秒，防止个别线程卡住导致无法退出
+			Loop While t < 100
 		End If
-	Next
-	If AIThread <> 0 Then
-		Dim As Any Ptr aitid = AIThread
-		AIThread = 0
-		Dim As Integer t = 0
-		Do
-			Dim As UInteger w = MsgWaitForMultipleObjects(1, @aitid, 0, 100, &H00FF)
-			If w = 0 Then Exit Do
-			If w = 1 Then pApp->DoEvents
-			t += 1
-		Loop While t < 100
-	End If
+	#endif
 	WDeAllocate(ProjectsPath)
 	WDeAllocate(LastOpenPath)
 	WDeAllocate(DefaultMakeTool)
