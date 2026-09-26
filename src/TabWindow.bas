@@ -5894,7 +5894,7 @@ Sub OnKeyPressEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key
 	Var tb = Cast(TabWindow Ptr, Sender.Tag)
 	If tb = 0 Then Exit Sub
 	If IsArg(Key) Then tb->AutoSaveCharCount += 1
-	If tb->AutoSaveCharCount > AutoSaveCharMax Then
+	If AutoSaveCharMax <> 0 AndAlso tb->AutoSaveCharCount > AutoSaveCharMax Then
 		tb->txtCode.SaveToFile(GetBakFileName(tb->FileName), tb->FileEncoding, tb->NewLineType)
 		tb->AutoSaveCharCount = 0
 	End If

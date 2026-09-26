@@ -857,11 +857,21 @@ End Function
 
 Function GetBakFileName(ByRef FileName As WString) As UString
 	Dim As String BakDate = Format(Now, "yyyymmdd_hhmm") 'David Change ReplaceAny(__DATE_ISO__ & "_" & Time,":/\-","")
-	If FileName = "" Then Return ExePath + "/Temp/" + "Temp_" & BakDate & ".bak"
-	Dim As WString * MAX_PATH iFileName
+	If FileName = "" Then
+		Dim As String TempFolder = GetSpecialPath("USERTEMP") & APP_TITLE & "/"
+		If Not FolderExists(TempFolder) Then
+			MkDir TempFolder
+		End If
+		Return TempFolder + "Temp_" & BakDate & ".bak"
+	End If
 	Dim Pos1 As Long = InStrRev(FileName, ".")
 	If Pos1 = 0 Then Pos1 = Len(FileName)
-	Dim As WString * MAX_PATH Path = GetSpecialPath("USERDOCUMENTS") + "/" + APP_TITLE + " Projects/Backups"
+	Dim As WString * MAX_PATH iFileName
+	Dim As WString * MAX_PATH UserProjectsPath = GetSpecialPath("USERDOCUMENTS") + APP_TITLE + " Projects"
+	Dim As WString * MAX_PATH Path = UserProjectsPath + "/Backups"
+	If Not FolderExists(UserProjectsPath) Then
+		MkDir UserProjectsPath
+	End If
 	If Not FolderExists(Path) Then
 		MkDir Path
 	End If
